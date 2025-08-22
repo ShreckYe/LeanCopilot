@@ -71,8 +71,26 @@ def hasCUDA : IO Bool := do
     let out ← IO.Process.output {cmd := "which", args := #["nvcc"], stdin := .null}
     return out.exitCode == 0
 
+def hasROCm : IO Bool := do
+  if getOS! == .windows then
+    -- Check for ROCm on Windows (if supported)
+    let ok ← testProc {
+      cmd := "rocm-smi"
+      args := #[]
+    }
+    return ok
+  else
+    -- Check for ROCm compiler or runtime
+    let rocmcc ← IO.Process.output {cmd := "which", args := #["hipcc"], stdin := .null}
+    if rocmcc.exitCode == 0 then return true
+    let rocmsmi ← IO.Process.output {cmd := "which", args := #["rocm-smi"], stdin := .null}
+    return rocmsmi.exitCode == 0
+
 def useCUDA : IO Bool := do
   return (get_config? noCUDA |>.isNone) ∧ (← hasCUDA)
+
+def useROCm : IO Bool := do
+  return (get_config? noROCm |>.isNone) ∧ (← hasROCm)
 
 
 def buildArchiveName : String :=
@@ -80,6 +98,8 @@ def buildArchiveName : String :=
   let os := if getOS! == .macos then "macOS" else "linux"
   if run_io useCUDA then
     s!"{arch}-cuda-{os}.tar.gz"
+  else if run_io useROCm then
+    s!"{arch}-rocm-{os}.tar.gz"
   else
     s!"{arch}-{os}.tar.gz"
 

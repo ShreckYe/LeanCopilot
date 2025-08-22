@@ -16,7 +16,9 @@ class HFTacticGenerator(Generator, Transformer):
         )
         device = args["device"]
         if device == "auto":
-            device = get_cuda_if_available()
+            device = get_best_device_available()
+        elif device == "rocm":
+            device = get_rocm_if_available()
         else:
             device = torch.device(device)
         logger.info(f"Loading {self.name} on {device}")

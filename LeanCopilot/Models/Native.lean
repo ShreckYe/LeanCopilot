@@ -10,6 +10,7 @@ namespace LeanCopilot
 inductive Device where
   | cpu
   | cuda
+  | rocm
   | auto
 deriving Repr
 
@@ -21,6 +22,7 @@ instance : Inhabited Device where
 def Device.toString : Device → String
   | Device.cpu => "cpu"
   | Device.cuda => "cuda"
+  | Device.rocm => "rocm"
   | Device.auto => "auto"
 
 instance : ToString Device := ⟨Device.toString⟩

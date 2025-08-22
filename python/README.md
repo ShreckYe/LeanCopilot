@@ -7,11 +7,29 @@ This folder contains code that enables running some of the leading general-purpo
 
 The setup steps are pretty simple. The script below is sufficient to run all external models already supported in this folder. If you only want to run a subset of them, you may not need all packages in the last step of pip installation.
 
+### For NVIDIA CUDA:
 ```bash
 conda create --name lean-copilot python=3.10 python numpy
 conda activate lean-copilot
-pip install torch --index-url https://download.pytorch.org/whl/cu121  # Depending on whether you have CUDA and, if so, your CUDA version; see https://pytorch.org/.
+pip install torch --index-url https://download.pytorch.org/whl/cu121  # Depending on your CUDA version; see https://pytorch.org/
 pip install fastapi uvicorn loguru transformers openai anthropic google.generativeai vllm
+```
+
+### For AMD ROCm:
+```bash
+conda create --name lean-copilot python=3.10 python numpy
+conda activate lean-copilot
+pip install torch --index-url https://download.pytorch.org/whl/rocm6.0  # See https://pytorch.org/get-started/locally/ for ROCm versions
+pip install fastapi uvicorn loguru transformers openai anthropic google.generativeai
+# Note: vllm may not support ROCm - check vllm documentation for ROCm compatibility
+```
+
+### CPU Only:
+```bash
+conda create --name lean-copilot python=3.10 python numpy
+conda activate lean-copilot
+pip install torch --index-url https://download.pytorch.org/whl/cpu
+pip install fastapi uvicorn loguru transformers openai anthropic google.generativeai
 ```
 
 ## Running the Server
@@ -21,6 +39,22 @@ uvicorn server:app --port 23337
 ```
 
 After the server is up running, you can go to `LeanCopilotTests/ModelAPIs.lean` to try your external models out!
+
+## Testing ROCm Support
+
+To test ROCm/HIP support for AMD GPUs:
+
+```bash
+# Run the ROCm test script
+python test_rocm.py
+```
+
+This will test:
+- ROCm device detection
+- Model loading on ROCm devices  
+- Basic inference functionality
+
+The script will automatically fall back to CPU if ROCm is not available.
 
 ## Contributions
 

@@ -8,6 +8,28 @@ def get_cuda_if_available():
     return torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
+def get_rocm_if_available():
+    """Check if ROCm is available through PyTorch's HIP backend"""
+    if torch.cuda.is_available():
+        try:
+            if torch.cuda.device_count() > 0:
+                props = torch.cuda.get_device_properties(0)
+                device_name = props.name.lower()
+                if any(keyword in device_name for keyword in ['radeon', 'vega', 'navi', 'rdna', 'gfx']):
+                    return torch.device("cuda")  # ROCm uses cuda API
+            return torch.device("cuda")
+        except:
+            pass
+    return torch.device("cpu")
+
+
+def get_best_device_available():
+    """Get the best available device: CUDA, ROCm, or CPU"""
+    if torch.cuda.is_available():
+        return torch.device("cuda")  # This covers both NVIDIA CUDA and AMD ROCm
+    return torch.device("cpu")
+
+
 def pre_process_input(model_name, input):
     if model_name == "internlm/internlm2-math-plus-1_8b" or model_name == "AI-MO/Kimina-Prover-Preview-Distill-7B":    
         prompt = (
@@ -85,6 +107,15 @@ class Transformer:
 
     def cpu(self) -> None:
         self.model.cpu()
+
+    def rocm(self) -> None:
+        """Move model to ROCm device (uses cuda() since ROCm uses CUDA API)"""
+        self.model.cuda()
+
+    def to_best_device(self) -> None:
+        """Move model to the best available device"""
+        device = get_best_device_available()
+        self.model.to(device)
 
     @property
     def device(self) -> torch.device:

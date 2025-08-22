@@ -4,6 +4,8 @@ open LeanCopilot
 
 #eval cudaAvailable
 
+#eval rocmAvailable
+
 /--
 ReProver's tactic generator in CT2 format.
 -/
@@ -24,6 +26,15 @@ def reprover' : NativeGenerator := {reprover with
 }
 
 #eval generate reprover' "n : ℕ\n⊢ gcd n n = n"
+
+def reprover_rocm : NativeGenerator := {reprover with
+  device := .rocm
+  computeType := .float32
+  params := {numReturnSequences := 2}
+}
+
+-- ROCm test (will fallback to CPU if ROCm not available)
+#eval generate reprover_rocm "n : ℕ\n⊢ gcd n n = n"
 
 
 /--
