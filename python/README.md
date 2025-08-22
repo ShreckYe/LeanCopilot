@@ -30,8 +30,6 @@ pip install fastapi uvicorn loguru transformers openai anthropic google.generati
 
 ### CPU Only:
 ```bash
-conda create --name lean-copilot python=3.10 python numpy
-conda activate lean-copilot
 pip install torch --index-url https://download.pytorch.org/whl/cpu
 pip install fastapi uvicorn loguru transformers openai anthropic google.generativeai
 ```

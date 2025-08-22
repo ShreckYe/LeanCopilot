@@ -27,12 +27,12 @@ class Transformer:
     def cuda(self) -> None:
         self.model.cuda()
 
-    def cpu(self) -> None:
-        self.model.cpu()
-
     def rocm(self) -> None:
         """Move model to ROCm device (uses cuda() since ROCm uses CUDA API)"""
         self.model.cuda()
+
+    def cpu(self) -> None:
+        self.model.cpu()
 
     def to_best_device(self) -> None:
         """Move model to the best available device"""
@@ -77,6 +77,18 @@ def get_best_device_available():
     return torch.device("cpu")
 
 
+def get_device(device_str: str) -> torch.device:
+    """Convert device string to torch.device, handling auto/cuda/rocm options"""
+    if device_str == "auto":
+        return get_best_device_available()
+    elif device_str == "cuda":
+        return get_cuda_if_available()
+    elif device_str == "rocm":
+        return get_rocm_if_available()
+    else:
+        return torch.device(device_str)
+
+
 class DecoderOnlyTransformer(Generator, Transformer):
     def __init__(
         self,
@@ -87,12 +99,7 @@ class DecoderOnlyTransformer(Generator, Transformer):
         device: str = "cpu",
     ) -> None:
         self.tokenizer = AutoTokenizer.from_pretrained(name)
-        if device == "auto":
-            device = get_best_device_available()
-        elif device == "rocm":
-            device = get_rocm_if_available()
-        else:
-            device = torch.device(device)
+        device = get_device(device)
         logger.info(f"Loading {name} on {device}")
         self.model = AutoModelForCausalLM.from_pretrained(name).to(device)
         self.max_length = max_length
@@ -154,14 +161,7 @@ class EncoderDecoderTransformer(Generator, Transformer):
         device: str = "cpu",
     ) -> None:
         self.tokenizer = AutoTokenizer.from_pretrained(name)
-        if device == "auto":
-            device = get_best_device_available()
-        elif device == "cuda":
-            device = get_cuda_if_available()
-        elif device == "rocm":
-            device = get_rocm_if_available()
-        else:
-            device = torch.device(device)
+        device = get_device(device)
         logger.info(f"Loading {name} on {device}")
         self.model = AutoModelForSeq2SeqLM.from_pretrained(name)
         self.max_length = max_length
@@ -193,14 +193,7 @@ class EncoderDecoderTransformer(Generator, Transformer):
 class EncoderOnlyTransformer(Encoder, Transformer):
     def __init__(self, name: str, device: str = "cpu") -> None:
         self.tokenizer = AutoTokenizer.from_pretrained(name)
-        if device == "auto":
-            device = get_best_device_available()
-        elif device == "cuda":
-            device = get_cuda_if_available()
-        elif device == "rocm":
-            device = get_rocm_if_available()
-        else:
-            device = torch.device(device)
+        device = get_device(device)
         logger.info(f"Loading {name} on {device}")
         self.model = AutoModelForTextEncoding.from_pretrained(name)
 
