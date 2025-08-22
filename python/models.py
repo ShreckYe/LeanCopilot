@@ -156,6 +156,8 @@ class EncoderDecoderTransformer(Generator, Transformer):
         self.tokenizer = AutoTokenizer.from_pretrained(name)
         if device == "auto":
             device = get_best_device_available()
+        elif device == "cuda":
+            device = get_cuda_if_available()
         elif device == "rocm":
             device = get_rocm_if_available()
         else:
@@ -193,6 +195,8 @@ class EncoderOnlyTransformer(Encoder, Transformer):
         self.tokenizer = AutoTokenizer.from_pretrained(name)
         if device == "auto":
             device = get_best_device_available()
+        elif device == "cuda":
+            device = get_cuda_if_available()
         elif device == "rocm":
             device = get_rocm_if_available()
         else:

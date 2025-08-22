@@ -73,14 +73,12 @@ def hasCUDA : IO Bool := do
 
 def hasROCm : IO Bool := do
   if getOS! == .windows then
-    -- Check for ROCm on Windows (if supported)
     let ok ← testProc {
       cmd := "rocm-smi"
       args := #[]
     }
     return ok
   else
-    -- Check for ROCm compiler or runtime
     let rocmcc ← IO.Process.output {cmd := "which", args := #["hipcc"], stdin := .null}
     if rocmcc.exitCode == 0 then return true
     let rocmsmi ← IO.Process.output {cmd := "which", args := #["rocm-smi"], stdin := .null}

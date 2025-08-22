@@ -17,6 +17,8 @@ class HFTacticGenerator(Generator, Transformer):
         device = args["device"]
         if device == "auto":
             device = get_best_device_available()
+        elif device == "cuda":
+            device = get_cuda_if_available()
         elif device == "rocm":
             device = get_rocm_if_available()
         else:

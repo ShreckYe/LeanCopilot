@@ -7,18 +7,22 @@ This folder contains code that enables running some of the leading general-purpo
 
 The setup steps are pretty simple. The script below is sufficient to run all external models already supported in this folder. If you only want to run a subset of them, you may not need all packages in the last step of pip installation.
 
-### For NVIDIA CUDA:
+First, create a conda environment:
 ```bash
 conda create --name lean-copilot python=3.10 python numpy
 conda activate lean-copilot
+```
+
+Then install the appropriate PyTorch version and other dependencies based on your hardware:
+
+### For NVIDIA CUDA:
+```bash
 pip install torch --index-url https://download.pytorch.org/whl/cu121  # Depending on your CUDA version; see https://pytorch.org/
 pip install fastapi uvicorn loguru transformers openai anthropic google.generativeai vllm
 ```
 
 ### For AMD ROCm:
 ```bash
-conda create --name lean-copilot python=3.10 python numpy
-conda activate lean-copilot
 pip install torch --index-url https://download.pytorch.org/whl/rocm6.0  # See https://pytorch.org/get-started/locally/ for ROCm versions
 pip install fastapi uvicorn loguru transformers openai anthropic google.generativeai
 # Note: vllm may not support ROCm - check vllm documentation for ROCm compatibility
