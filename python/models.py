@@ -49,13 +49,23 @@ def get_cuda_if_available():
 
 
 def get_rocm_if_available():
-    """Check if ROCm is available through PyTorch's HIP backend"""
-    # PyTorch with ROCm support uses the same CUDA API calls internally
-    # but runs on AMD GPUs through the HIP compatibility layer
+    """Check if ROCm is available through environment variables and PyTorch's HIP backend"""
+    import os
+    
+    # Method 1: Check ROCm environment variables (consistent with C++ implementation)
+    hip_visible_devices = os.environ.get("HIP_VISIBLE_DEVICES")
+    rocr_visible_devices = os.environ.get("ROCR_VISIBLE_DEVICES")
+    
+    if hip_visible_devices or rocr_visible_devices:
+        # ROCm environment detected, check if PyTorch supports it
+        if torch.cuda.is_available():
+            return torch.device("cuda")  # ROCm uses CUDA API through HIP
+        else:
+            # ROCm environment set but PyTorch doesn't have CUDA/ROCm support
+            return torch.device("cpu")
+    
+    # Method 2: Fallback to device name detection if PyTorch has CUDA support
     if torch.cuda.is_available():
-        # Additional check to see if we're running on ROCm
-        # This is a heuristic - in practice, ROCm-enabled PyTorch
-        # will report cuda.is_available() as True
         try:
             # Try to get device properties to detect AMD GPU
             if torch.cuda.device_count() > 0:
@@ -64,9 +74,9 @@ def get_rocm_if_available():
                 device_name = props.name.lower()
                 if any(keyword in device_name for keyword in ['radeon', 'vega', 'navi', 'rdna', 'gfx']):
                     return torch.device("cuda")  # ROCm uses cuda API
-            return torch.device("cuda")  # Default to cuda if available
         except:
             pass
+    
     return torch.device("cpu")
 
 
