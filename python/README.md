@@ -24,8 +24,7 @@ pip install fastapi uvicorn loguru transformers openai anthropic google.generati
 ### For AMD ROCm:
 ```bash
 pip install torch --index-url https://download.pytorch.org/whl/rocm6.4  # See https://pytorch.org/get-started/locally/ for ROCm versions
-pip install fastapi uvicorn loguru transformers openai anthropic google.generativeai
-# Note: vllm may not support ROCm - check vllm documentation for ROCm compatibility
+pip install fastapi uvicorn loguru transformers openai anthropic google.generativeai vllm
 ```
 
 ### CPU Only:
