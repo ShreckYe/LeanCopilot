@@ -43,6 +43,8 @@ After the server is up running, you can go to `LeanCopilotTests/ModelAPIs.lean` 
 
 ## Testing ROCm Support
 
+TODO remove this section when the PR is completed
+
 To test ROCm/HIP support for AMD GPUs:
 
 ```bash

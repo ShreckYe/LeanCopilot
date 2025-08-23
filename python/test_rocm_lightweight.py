@@ -1,3 +1,5 @@
+# TODO remove this file when the PR is completed
+
 #!/usr/bin/env python3
 """
 Lightweight ROCm test script for LeanCopilot with memory constraints.

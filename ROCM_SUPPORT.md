@@ -1,6 +1,6 @@
 # ROCm/HIP Support Implementation for LeanCopilot
 
-This whole file is added by GitHub Copilot coding agent and is relatively long. Try simplifying this or delete this if it turns out to be unnecessary in the future.
+TODO remove this file when the PR is completed
 
 This document describes the ROCm/HIP support implementation for LeanCopilot and provides instructions for testing.
 
