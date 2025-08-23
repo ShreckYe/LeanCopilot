@@ -48,11 +48,16 @@ opaque retrieve (queryEmb : @& FloatArray) (k : UInt64) : Array (String × Strin
 @[extern "cuda_available"]
 opaque cudaAvailable : Unit → Bool
 
+@[extern "rocm_available"]
+opaque rocmAvailable : Unit → Bool
+
 
 end FFI
 
 
 def cudaAvailable : Bool := FFI.cudaAvailable ()
+
+def rocmAvailable : Bool := FFI.rocmAvailable ()
 
 
 namespace NativeGenerator

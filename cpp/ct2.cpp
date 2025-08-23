@@ -6,6 +6,7 @@
 #include <lean/lean.h>
 
 #include <codecvt>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <locale>
@@ -38,6 +39,34 @@ inline lean_obj_res lean_mk_pair(lean_obj_arg a, lean_obj_arg b) {
 
 extern "C" uint8_t cuda_available(b_lean_obj_arg) {
   return ctranslate2::str_to_device("auto") == ctranslate2::Device::CUDA;
+}
+
+extern "C" uint8_t rocm_available(b_lean_obj_arg) {
+  // Check if ROCm/HIP is available
+  // ROCm typically exposes itself through HIP runtime API or environment variables
+  try {
+    // Method 1: Check for HIP environment variables
+    const char* hip_visible_devices = std::getenv("HIP_VISIBLE_DEVICES");
+    const char* rocr_visible_devices = std::getenv("ROCR_VISIBLE_DEVICES");
+    
+    if (hip_visible_devices || rocr_visible_devices) {
+      return true;
+    }
+    
+    // Method 2: Check if ROCm runtime libraries are available
+    // This is a basic check - in practice, we'd need to dynamically load libhip
+    // For now, we assume ROCm is available if CUDA is available but we detect AMD GPU
+    bool has_gpu = ctranslate2::str_to_device("auto") != ctranslate2::Device::CPU;
+    if (has_gpu) {
+      // This is a simplified heuristic - real implementation would need
+      // proper HIP runtime detection
+      return false; // Conservative approach until we can properly detect ROCm
+    }
+    
+    return false;
+  } catch (...) {
+    return false;
+  }
 }
 
 template <typename T>

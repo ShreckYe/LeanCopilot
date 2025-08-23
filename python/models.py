@@ -27,8 +27,17 @@ class Transformer:
     def cuda(self) -> None:
         self.model.cuda()
 
+    def rocm(self) -> None:
+        """Move model to ROCm device (uses cuda() since ROCm uses CUDA API)"""
+        self.model.cuda()
+
     def cpu(self) -> None:
         self.model.cpu()
+
+    def to_best_device(self) -> None:
+        """Move model to the best available device"""
+        device = get_best_device_available()
+        self.model.to(device)
 
     @property
     def device(self) -> torch.device:
@@ -37,6 +46,57 @@ class Transformer:
 
 def get_cuda_if_available():
     return torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+
+def get_rocm_if_available():
+    """Check if ROCm is available through environment variables and PyTorch's HIP backend"""
+    import os
+    
+    # Method 1: Check ROCm environment variables (consistent with C++ implementation)
+    hip_visible_devices = os.environ.get("HIP_VISIBLE_DEVICES")
+    rocr_visible_devices = os.environ.get("ROCR_VISIBLE_DEVICES")
+    
+    if hip_visible_devices or rocr_visible_devices:
+        # ROCm environment detected, check if PyTorch supports it
+        if torch.cuda.is_available():
+            return torch.device("cuda")  # ROCm uses CUDA API through HIP
+        else:
+            # ROCm environment set but PyTorch doesn't have CUDA/ROCm support
+            return torch.device("cpu")
+    
+    # Method 2: Fallback to device name detection if PyTorch has CUDA support
+    if torch.cuda.is_available():
+        try:
+            # Try to get device properties to detect AMD GPU
+            if torch.cuda.device_count() > 0:
+                props = torch.cuda.get_device_properties(0)
+                # ROCm devices often have specific naming patterns
+                device_name = props.name.lower()
+                if any(keyword in device_name for keyword in ['radeon', 'vega', 'navi', 'rdna', 'gfx']):
+                    return torch.device("cuda")  # ROCm uses cuda API
+        except:
+            pass
+    
+    return torch.device("cpu")
+
+
+def get_best_device_available():
+    """Get the best available device: CUDA, ROCm, or CPU"""
+    if torch.cuda.is_available():
+        return torch.device("cuda")  # This covers both NVIDIA CUDA and AMD ROCm
+    return torch.device("cpu")
+
+
+def get_device(device_str: str) -> torch.device:
+    """Convert device string to torch.device, handling auto/cuda/rocm options"""
+    if device_str == "auto":
+        return get_best_device_available()
+    elif device_str == "cuda":
+        return get_cuda_if_available()
+    elif device_str == "rocm":
+        return get_rocm_if_available()
+    else:
+        return torch.device(device_str)
 
 
 class DecoderOnlyTransformer(Generator, Transformer):
@@ -49,10 +109,7 @@ class DecoderOnlyTransformer(Generator, Transformer):
         device: str = "cpu",
     ) -> None:
         self.tokenizer = AutoTokenizer.from_pretrained(name)
-        if device == "auto":
-            device = get_cuda_if_available()
-        else:
-            device = torch.device(device)
+        device = get_device(device)
         logger.info(f"Loading {name} on {device}")
         self.model = AutoModelForCausalLM.from_pretrained(name).to(device)
         self.max_length = max_length
@@ -114,10 +171,7 @@ class EncoderDecoderTransformer(Generator, Transformer):
         device: str = "cpu",
     ) -> None:
         self.tokenizer = AutoTokenizer.from_pretrained(name)
-        if device == "auto":
-            device = get_cuda_if_available()
-        else:
-            device = torch.device(device)
+        device = get_device(device)
         logger.info(f"Loading {name} on {device}")
         self.model = AutoModelForSeq2SeqLM.from_pretrained(name)
         self.max_length = max_length
@@ -149,10 +203,7 @@ class EncoderDecoderTransformer(Generator, Transformer):
 class EncoderOnlyTransformer(Encoder, Transformer):
     def __init__(self, name: str, device: str = "cpu") -> None:
         self.tokenizer = AutoTokenizer.from_pretrained(name)
-        if device == "auto":
-            device = get_cuda_if_available()
-        else:
-            device = torch.device(device)
+        device = get_device(device)
         logger.info(f"Loading {name} on {device}")
         self.model = AutoModelForTextEncoding.from_pretrained(name)
 
